@@ -43,7 +43,7 @@ message DeleteUserRes {
 message ListUsersReq {}
 
 message ListUsersRes {
-    repeated User users = 1;
+    User users = 1;
 }
 
 service UserService {
@@ -56,6 +56,6 @@ service UserService {
 
     rpc DeleteUser (DeleteUserReq) returns (DeleteUserRes);
 
-    rpc ListUsers (ListUsersReq) returns (ListUsersRes);
+    rpc ListUsers (ListUsersReq) returns (stream ListUsersRes);
 
 }

@@ -22,7 +22,7 @@ type UserServiceClient interface {
 	ReadUser(ctx context.Context, in *ReadUserReq, opts ...grpc.CallOption) (*ReadUserRes, error)
 	UpdateUser(ctx context.Context, in *UpdateUserReq, opts ...grpc.CallOption) (*UpdateUserRes, error)
 	DeleteUser(ctx context.Context, in *DeleteUserReq, opts ...grpc.CallOption) (*DeleteUserRes, error)
-	ListUsers(ctx context.Context, in *ListUsersReq, opts ...grpc.CallOption) (*ListUsersRes, error)
+	ListUsers(ctx context.Context, in *ListUsersReq, opts ...grpc.CallOption) (UserService_ListUsersClient, error)
 }
 
 type userServiceClient struct {
@@ -69,13 +69,36 @@ func (c *userServiceClient) DeleteUser(ctx context.Context, in *DeleteUserReq, o
 	return out, nil
 }
 
-func (c *userServiceClient) ListUsers(ctx context.Context, in *ListUsersReq, opts ...grpc.CallOption) (*ListUsersRes, error) {
-	out := new(ListUsersRes)
-	err := c.cc.Invoke(ctx, "/UserService/ListUsers", in, out, opts...)
+func (c *userServiceClient) ListUsers(ctx context.Context, in *ListUsersReq, opts ...grpc.CallOption) (UserService_ListUsersClient, error) {
+	stream, err := c.cc.NewStream(ctx, &UserService_ServiceDesc.Streams[0], "/UserService/ListUsers", opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &userServiceListUsersClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type UserService_ListUsersClient interface {
+	Recv() (*ListUsersRes, error)
+	grpc.ClientStream
+}
+
+type userServiceListUsersClient struct {
+	grpc.ClientStream
+}
+
+func (x *userServiceListUsersClient) Recv() (*ListUsersRes, error) {
+	m := new(ListUsersRes)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 // UserServiceServer is the server API for UserService service.
@@ -86,7 +109,7 @@ type UserServiceServer interface {
 	ReadUser(context.Context, *ReadUserReq) (*ReadUserRes, error)
 	UpdateUser(context.Context, *UpdateUserReq) (*UpdateUserRes, error)
 	DeleteUser(context.Context, *DeleteUserReq) (*DeleteUserRes, error)
-	ListUsers(context.Context, *ListUsersReq) (*ListUsersRes, error)
+	ListUsers(*ListUsersReq, UserService_ListUsersServer) error
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -106,8 +129,8 @@ func (UnimplementedUserServiceServer) UpdateUser(context.Context, *UpdateUserReq
 func (UnimplementedUserServiceServer) DeleteUser(context.Context, *DeleteUserReq) (*DeleteUserRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteUser not implemented")
 }
-func (UnimplementedUserServiceServer) ListUsers(context.Context, *ListUsersReq) (*ListUsersRes, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListUsers not implemented")
+func (UnimplementedUserServiceServer) ListUsers(*ListUsersReq, UserService_ListUsersServer) error {
+	return status.Errorf(codes.Unimplemented, "method ListUsers not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 
@@ -194,22 +217,25 @@ func _UserService_DeleteUser_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_ListUsers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListUsersReq)
-	if err := dec(in); err != nil {
-		return nil, err
+func _UserService_ListUsers_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ListUsersReq)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
 	}
-	if interceptor == nil {
-		return srv.(UserServiceServer).ListUsers(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/UserService/ListUsers",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).ListUsers(ctx, req.(*ListUsersReq))
-	}
-	return interceptor(ctx, in, info, handler)
+	return srv.(UserServiceServer).ListUsers(m, &userServiceListUsersServer{stream})
+}
+
+type UserService_ListUsersServer interface {
+	Send(*ListUsersRes) error
+	grpc.ServerStream
+}
+
+type userServiceListUsersServer struct {
+	grpc.ServerStream
+}
+
+func (x *userServiceListUsersServer) Send(m *ListUsersRes) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
@@ -235,11 +261,13 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "DeleteUser",
 			Handler:    _UserService_DeleteUser_Handler,
 		},
+	},
+	Streams: []grpc.StreamDesc{
 		{
-			MethodName: "ListUsers",
-			Handler:    _UserService_ListUsers_Handler,
+			StreamName:    "ListUsers",
+			Handler:       _UserService_ListUsers_Handler,
+			ServerStreams: true,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
 	Metadata: "people.proto",
 }
