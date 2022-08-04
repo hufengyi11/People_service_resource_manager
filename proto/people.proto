@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+// options used by gRPC golang plugin(not related to gRPC gateway)
+option go_package = "github.com/hufengyi11/People_service_resource_manager;People_service_resource_manager";
+
+message User {
+    string id = 1;
+    string name = 2;
+}
+
+message CreateUserReq {
+    User user = 1;
+}
+
+message CreateUserRes {
+    User user = 1;
+}
+
+message ReadUserReq {
+    string name = 1;
+}
+
+message ReadUserRes {
+    User user = 1;
+}
+
+message UpdateUserReq {
+    User user = 1;
+}
+
+message UpdateUserRes {
+    User user = 1;
+}
+
+message DeleteUserReq {
+    string id = 1;
+}
+
+message DeleteUserRes {
+    bool success = 1;
+}
+
+message ListUsersReq {}
+
+message ListUsersRes {
+    repeated User users = 1;
+}
+
+service UserService {
+
+    rpc CreateUser (CreateUserReq) returns (CreateUserRes);
+
+    rpc ReadUser (ReadUserReq) returns (ReadUserRes);
+
+    rpc UpdateUser (UpdateUserReq) returns (UpdateUserRes);
+
+    rpc DeleteUser (DeleteUserReq) returns (DeleteUserRes);
+
+    rpc ListUsers (ListUsersReq) returns (ListUsersRes);
+
+}
