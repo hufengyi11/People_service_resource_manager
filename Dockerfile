@@ -14,6 +14,7 @@ COPY . .
 
 RUN go build -o /people-service
 
+
 CMD [ "/people-service" ]
 
 # # RUN go get ./...

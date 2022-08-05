@@ -171,8 +171,8 @@ func (u *UserServiceServerImpl) ListUsers(req *gen.ListUsersReq, stream gen.User
 	}
 	defer client.Disconnect(context.Background())
 
-	resourceManagerDB := client.Database("ResourceManagement")
-	collection := resourceManagerDB.Collection("People_Service")
+	// resourceManagerDB := client.Database("ResourceManagement")
+	collection := client.Database("ResourceManagement").Collection("People_Service")
 
 	connectErr := client.Connect(context.Background())
 	if connectErr != nil {
