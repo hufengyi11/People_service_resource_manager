@@ -29,7 +29,7 @@ func main() {
 	var projectServer = impl.UserServiceServerImpl{}
 	gen.RegisterUserServiceServer(grpcServer, &projectServer)
 
-	address := "localhost:8080"
+	address := ":8080"
 	lis, err := net.Listen("tcp", address)
 	if err != nil {
 		log.Fatalf("could not listen to %s %v !!!!!!", address, err)
