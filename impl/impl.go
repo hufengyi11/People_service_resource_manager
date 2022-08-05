@@ -161,12 +161,18 @@ func (u *UserServiceServerImpl) DeleteUser(ctx context.Context, req *gen.DeleteU
 func (u *UserServiceServerImpl) ListUsers(req *gen.ListUsersReq, stream gen.UserService_ListUsersServer) error {
 	data := &UserDetail{}
 
-	client, collection, err := mongoNewClient()
-	if err != nil {
-		fmt.Printf("Client error: %v", err)
-		return nil
+	// list user needs new client instead of new connect
+	client, clientErr := mongo.NewClient(options.Client().ApplyURI(os.Getenv("MONGODB_URI")))
+	if clientErr != nil {
+		return status.Errorf(
+			codes.NotFound,
+			fmt.Sprintf("Client Error: %v", clientErr),
+		)
 	}
-	// defer client.Disconnect(ctx)
+	defer client.Disconnect(context.Background())
+
+	resourceManagerDB := client.Database("ResourceManagement")
+	collection := resourceManagerDB.Collection("People_Service")
 
 	connectErr := client.Connect(context.Background())
 	if connectErr != nil {
