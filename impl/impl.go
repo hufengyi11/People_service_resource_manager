@@ -158,18 +158,25 @@ func (u *UserServiceServerImpl) DeleteUser(ctx context.Context, req *gen.DeleteU
 
 }
 
-func (u *UserServiceServerImpl) ListUsers(req *gen.ListUsersReq, stream gen.UserService_ListUsersServer) (*gen.ListUsersRes, error) {
+func (u *UserServiceServerImpl) ListUsers(req *gen.ListUsersReq, stream gen.UserService_ListUsersServer) error {
 	client, collection, err := mongoNewClient()
 	if err != nil {
-		return nil, err
+		fmt.Printf("error: %v", err)
+		return nil
 	}
 	// defer client.Disconnect(ctx)
 
 	connectErr := client.Connect(context.Background())
+	if connectErr != nil {
+		return status.Errorf(
+			codes.NotFound,
+			fmt.Sprintf("Connect Error: %v", connectErr),
+		)
+	}
 
 	cursor, err := collection.Find(context.Background(), bson.M{})
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, fmt.Sprintf("Cursor Error: %v", connectErr))
+		return status.Errorf(codes.NotFound, fmt.Sprintf("Cursor Error: %v", connectErr))
 	}
 	defer cursor.Close(context.Background())
 
@@ -177,7 +184,7 @@ func (u *UserServiceServerImpl) ListUsers(req *gen.ListUsersReq, stream gen.User
 	for cursor.Next(context.Background()) {
 		err := cursor.Decode(data)
 		if err != nil {
-			return nil, status.Errorf(
+			return status.Errorf(
 				codes.NotFound,
 				fmt.Sprintf("Cursor Decode Error: %v", err),
 			)
@@ -192,8 +199,8 @@ func (u *UserServiceServerImpl) ListUsers(req *gen.ListUsersReq, stream gen.User
 	}
 
 	if err := cursor.Err(); err != nil {
-		return nil, status.Errorf(codes.NotFound, fmt.Sprintf("Cursor General Error: %v", err))
+		return status.Errorf(codes.NotFound, fmt.Sprintf("Cursor General Error: %v", err))
 	}
 
-	return nil, nil
+	return nil
 }
