@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 
 	gen "github.com/hufengyi11/People_service_resource_manager/gen/go"
 	"google.golang.org/grpc/codes"
@@ -29,7 +28,7 @@ type UserDetail struct {
 }
 
 func mongoNewClient() (*mongo.Client, *mongo.Collection, error) {
-	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(os.Getenv("MONGODB_URI")))
+	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI("mongodb+srv://dbUser:dbUserPassword@cluster0.kjucuqb.mongodb.net/?retryWrites=true&w=majority"))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -162,7 +161,7 @@ func (u *UserServiceServerImpl) ListUsers(req *gen.ListUsersReq, stream gen.User
 	data := &UserDetail{}
 
 	// list user needs new client instead of new connect
-	client, clientErr := mongo.NewClient(options.Client().ApplyURI(os.Getenv("MONGODB_URI")))
+	client, clientErr := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://dbUser:dbUserPassword@cluster0.kjucuqb.mongodb.net/?retryWrites=true&w=majority"))
 	if clientErr != nil {
 		return status.Errorf(
 			codes.NotFound,

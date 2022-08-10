@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-people-service
+spec:
+  rules:
+  - host: closet-collective.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: people-service
+            port:
+              number: 80
+  ingressClassName: nginx

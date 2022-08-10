@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"os"
 
 	gen "github.com/hufengyi11/People_service_resource_manager/gen/go"
 	impl "github.com/hufengyi11/People_service_resource_manager/impl"
-	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -39,13 +37,12 @@ func main() {
 
 	reflection.Register(grpcServer)
 
-	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found")
-	}
-	uri := os.Getenv("MONGODB_URI")
+	// if err := godotenv.Load(); err != nil {
+	// 	log.Println("No .env file found")
+	// }
+	// uri := os.Getenv("MONGODB_URI")
 
-	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(uri))
-	// client, err := mongo.NewClient(options.Client().ApplyURI(uri))
+	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI("mongodb+srv://dbUser:dbUserPassword@cluster0.kjucuqb.mongodb.net/?retryWrites=true&w=majority"))
 	if err != nil {
 		fmt.Printf("Connect Error: %v \n", err)
 	}
