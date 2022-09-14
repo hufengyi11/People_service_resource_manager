@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: Docker Build and Push
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 jobs:
 
   build:
-
+    environment: secrets
     runs-on: ubuntu-latest
 
     steps:
