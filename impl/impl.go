@@ -157,60 +157,32 @@ func (u *UserServiceServerImpl) DeleteUser(ctx context.Context, req *gen.DeleteU
 
 }
 
-func (u *UserServiceServerImpl) ListUsers(req *gen.ListUsersReq, stream gen.UserService_ListUsersServer) error {
+func (u *UserServiceServerImpl) ListUsers(context.Context, *gen.ListUsersReq) (*gen.ListUsersRes, error) {
 	data := &UserDetail{}
 
 	// list user needs new client instead of new connect
-	client, clientErr := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://dbUser:dbUserPassword@cluster0.kjucuqb.mongodb.net/?retryWrites=true&w=majority"))
-	if clientErr != nil {
-		return status.Errorf(
-			codes.NotFound,
-			fmt.Sprintf("Client Error: %v", clientErr),
-		)
-	}
+	client, _ := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://dbUser:dbUserPassword@cluster0.kjucuqb.mongodb.net/?retryWrites=true&w=majority"))
 	defer client.Disconnect(context.Background())
 
 	// resourceManagerDB := client.Database("ResourceManagement")
 	collection := client.Database("ResourceManagement").Collection("People_Service")
 
-	connectErr := client.Connect(context.Background())
-	if connectErr != nil {
-		return status.Errorf(
-			codes.NotFound,
-			fmt.Sprintf("Connect Error: %v", connectErr),
-		)
-	}
+	client.Connect(context.Background())
 
-	cursor, err := collection.Find(context.Background(), bson.M{})
-	if err != nil {
-		return status.Errorf(
-			codes.NotFound,
-			fmt.Sprintf("Cursor Error: %v", connectErr))
-	}
+	cursor, _ := collection.Find(context.Background(), bson.M{})
 	defer cursor.Close(context.Background())
 
-	for cursor.Next(context.Background()) {
-		err := cursor.Decode(data)
-		if err != nil {
-			return status.Errorf(
-				codes.NotFound,
-				fmt.Sprintf("Cursor Decode Error: %v", err),
-			)
-		}
+	list := []*gen.User{}
 
-		stream.Send(&gen.ListUsersRes{
-			Users: &gen.User{
-				Id:   data.ID.Hex(),
-				Name: data.Name,
-			},
+	for cursor.Next(context.Background()) {
+		cursor.Decode(data)
+		list = append(list, &gen.User{
+			Id:   data.ID.Hex(),
+			Name: data.Name,
 		})
 	}
 
-	if err := cursor.Err(); err != nil {
-		return status.Errorf(
-			codes.NotFound,
-			fmt.Sprintf("Cursor General Error: %v", err))
-	}
-
-	return nil
+	return &gen.ListUsersRes{
+		Users: list,
+	}, nil
 }

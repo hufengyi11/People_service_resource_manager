@@ -19,7 +19,6 @@ var db *mongo.Client
 var projectdb *mongo.Collection
 var mongoCtx context.Context
 
-// mongodb+srv://dbUser:dbUserPassword@cluster0.kjucuqb.mongodb.net/?retryWrites=true&w=majority
 func main() {
 
 	opts := []grpc.ServerOption{}
@@ -27,6 +26,7 @@ func main() {
 	var projectServer = impl.UserServiceServerImpl{}
 	gen.RegisterUserServiceServer(grpcServer, &projectServer)
 
+	// address := "rm-u-service:8080"
 	address := ":8080"
 	lis, err := net.Listen("tcp", address)
 	if err != nil {
@@ -52,17 +52,5 @@ func main() {
 		fmt.Printf("Ping Error: %v \n", err)
 	}
 
-	// database := client.Database("ResourceManagement")
-	// projectsCollection := database.Collection("People_Service")
-	// fmt.Println(projectsCollection.Find(context.Background(), bson.D{{}}))
-
 	log.Fatalln(grpcServer.Serve(lis))
-
-	// ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-
-	// eerr := client.Connect(ctx)
-	// if eerr != nil {
-	// 	log.Fatal(eerr)
-	// }
-	// defer client.Disconnect(ctx)
 }
